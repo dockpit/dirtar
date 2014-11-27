@@ -2,7 +2,9 @@ package dirtar
 
 import (
 	"archive/tar"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -49,8 +51,8 @@ func Tar(dir string, w io.Writer) error {
 			return err
 		}
 
-		//write header to archive
-		// hdr.Name = rel?
+		//write header to archive using rel dir
+		hdr.Name = rel
 		err = tw.WriteHeader(hdr)
 		if err != nil {
 			return err
@@ -75,7 +77,21 @@ func Tar(dir string, w io.Writer) error {
 // untar the archive into a given directory
 func Untar(dir string, r io.Reader) error {
 
-	//@todo check if dir is empty?
+	//check if dir exists and return fi
+	dirfi, err := os.Stat(dir)
+	if err != nil {
+		return err
+	}
+
+	//check if not empty
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	if len(files) != 0 {
+		return fmt.Errorf("Directory to untar into '%s' is not empty", dir)
+	}
 
 	//create a new reader
 	tr := tar.NewReader(r)
@@ -92,6 +108,11 @@ func Untar(dir string, r io.Reader) error {
 		//create and open files
 		//@todo this assumes the archives dir seperators are the same?
 		path := filepath.Join(dir, hdr.Name)
+
+		//make directory if doesnt exist with the same permissions as the root dir
+		os.MkdirAll(filepath.Dir(path), dirfi.Mode())
+
+		//create the actual files
 		f, err := os.Create(path)
 		if err != nil {
 			return err
