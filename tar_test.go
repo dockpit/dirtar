@@ -35,7 +35,7 @@ func TestTar(t *testing.T) {
 	}
 
 	//should now be able to stat nested file
-	fi, err := os.Stat(filepath.Join(dir, ".examples", "testfile.go"))
+	fi, err := os.Stat(filepath.Join(dir, ".example", "testfile.go"))
 	if err != nil {
 		t.Fatal(err)
 	}
